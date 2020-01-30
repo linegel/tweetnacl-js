@@ -49,7 +49,7 @@
     "tap-browser-color": "^0.1.2",
     "tape": "^4.6.3",
     "tape-run": "^2.1.4",
-    "tweetnacl-util": "^0.13.5",
+    "tweetnacl-util": "^0.15.1",
     "uglify-js": "^2.7.5"
   },
   "browser": {
