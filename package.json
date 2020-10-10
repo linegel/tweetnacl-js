@@ -42,7 +42,7 @@
   },
   "homepage": "https://tweetnacl.js.org",
   "devDependencies": {
-    "browserify": "^13.1.1",
+    "browserify": "^17.0.0",
     "electron": "^1.4.12",
     "eslint": "^3.12.1",
     "faucet": "^0.0.1",
