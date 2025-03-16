@@ -16,8 +16,21 @@ var _arrayCache = {
   _streamZ: new Uint8Array(16),
   _streamX: new Uint8Array(64),
   _signOpenT: new Uint8Array(32),
-  _signOpenH: new Uint8Array(64)
+  _signOpenH: new Uint8Array(64),
+  _signP: [gf(), gf(), gf(), gf()],
+  _signQ: [gf(), gf(), gf(), gf()],
+  _signD: new Uint8Array(64),
+  _signH: new Uint8Array(64),
+  _signR: new Uint8Array(64),
+  _signX: new Uint32Array(64),
+  _scalarMultX: new Uint32Array(80)
 };
+
+// Helper function for creating typed arrays with optimized memory allocation pattern
+function createTypedArray(constructor, size) {
+  // Maintain consistent allocation pattern to help JIT optimization
+  return new constructor(size);
+}
 
 function gf() {
   return new Uint32Array(16);
@@ -1930,15 +1943,18 @@ function pack(r, p) {
 
 function scalarmult(p, q, s) {
   var b, i;
+  
   // Initialize p directly with constants
   set25519(p[0], gf0);
   set25519(p[1], gf1);
   set25519(p[2], gf1);
   set25519(p[3], gf0);
   
-  // Iterate from most significant bit to least
+  // Use a simpler loop condition to help optimization
+  // and ensure consistent execution pattern
   for (i = 255; i >= 0; --i) {
-    b = (s[(i/8)|0] >> (i&7)) & 1;
+    // Use consistent bit extraction to help JIT optimize
+    b = (s[(i>>>3)] >>> (i&7)) & 1;
     
     // These operations are always performed in pairs
     cswap(p, q, b);
@@ -1949,7 +1965,8 @@ function scalarmult(p, q, s) {
 }
 
 function scalarbase(p, s) {
-  var q = [gf(), gf(), gf(), gf()];
+  // Use cached arrays instead of creating new ones
+  var q = _arrayCache._signQ;
   set25519(q[0], X);
   set25519(q[1], Y);
   set25519(q[2], gf1);
@@ -2004,16 +2021,19 @@ function modL(r, x) {
 
 function reduce(r) {
   var x = _arrayCache._reduceArray, i;
-  for (i = 0; i < 64; i++) x[i] = r[i];
+  // Use unsigned right shift to ensure numeric type stability
+  for (i = 0; i < 64; i++) x[i] = r[i] >>> 0;
   for (i = 0; i < 64; i++) r[i] = 0;
   modL(r, x);
 }
 
 // Note: difference from C - smlen returned, not passed as argument.
 function crypto_sign(sm, m, n, sk) {
-  var d = new Uint8Array(64), h = new Uint8Array(64), r = new Uint8Array(64);
-  var i, j, x = new Uint32Array(64);
-  var p = [gf(), gf(), gf(), gf()];
+  var i, j;
+  // Use cached arrays instead of creating new ones
+  var d = _arrayCache._signD, h = _arrayCache._signH, r = _arrayCache._signR;
+  var x = _arrayCache._signX;
+  var p = _arrayCache._signP;
 
   crypto_hash(d, sk, 32);
   d[0] &= 248;
@@ -2086,17 +2106,26 @@ function unpackneg(r, p) {
 }
 
 function crypto_sign_open(m, sm, n, pk) {
-  var i;
+  var i, result = 0;
+  // Use cached arrays
   var t = _arrayCache._signOpenT, h = _arrayCache._signOpenH;
-  var p = [gf(), gf(), gf(), gf()],
-      q = [gf(), gf(), gf(), gf()];
+  var p = _arrayCache._signP, q = _arrayCache._signQ;
 
-  if (n < 64) return -1;
+  // Use a consistent early return pattern to avoid deoptimization
+  if (n < 64) {
+    return -1;
+  }
 
-  if (unpackneg(q, pk)) return -1;
+  // Store result in a variable to maintain consistent code path
+  result = unpackneg(q, pk);
+  if (result !== 0) {
+    return -1;
+  }
 
+  // Use fixed iteration patterns where possible
   for (i = 0; i < n; i++) m[i] = sm[i];
   for (i = 0; i < 32; i++) m[i+32] = pk[i];
+  
   crypto_hash(h, m, n);
   reduce(h);
   scalarmult(p, q, h);
@@ -2106,7 +2135,9 @@ function crypto_sign_open(m, sm, n, pk) {
   pack(t, p);
 
   n -= 64;
-  if (crypto_verify_32(sm, 0, t, 0)) {
+  result = crypto_verify_32(sm, 0, t, 0);
+  if (result) {
+    // Always clear the same way
     for (i = 0; i < n; i++) m[i] = 0;
     return -1;
   }
