@@ -206,13 +206,13 @@ jobs:
               const change = parseFloat(data.delta);
               let changeStr = data.delta + '%';
               
-              // Add visual indicators for improvements/regressions
-              if (change > 0) {
-                changeStr = `+${data.delta}% 🟢`; // Green for improvement
-              } else if (change < 0) {
-                changeStr = `${data.delta}% 🔴`; // Red for regression
+              // Add visual indicators for improvements/regressions with 1% margin for neutral
+              if (change > 1) {
+                changeStr = `+${data.delta}% 🟢`; // Green for improvement > 1%
+              } else if (change < -1) {
+                changeStr = `${data.delta}% 🔴`; // Red for regression > 1%
               } else {
-                changeStr = `${data.delta}% ⚪`; // Neutral for no change
+                changeStr = `${data.delta}% ⚪`; // Neutral for changes within ±1%
               }
               
               comparisonTable += `| ${benchmark} | ${data.pr.toFixed(2)} | ${data.target.toFixed(2)} | ${changeStr} |\n`;
@@ -230,6 +230,8 @@ jobs:
           
           ### Performance Delta (PR vs ${targetBranchName})
           ${comparisonTable}
+          
+          *Note: Changes within ±1% are considered neutral due to normal benchmark variation.*
           `;
           
           github.rest.issues.createComment({
@@ -364,13 +366,13 @@ jobs:
               const change = parseFloat(data.delta);
               let changeStr = data.delta + '%';
               
-              // Add visual indicators for improvements/regressions
-              if (change > 0) {
-                changeStr = `+${data.delta}% 🟢`; // Green for improvement
-              } else if (change < 0) {
-                changeStr = `${data.delta}% 🔴`; // Red for regression
+              // Add visual indicators for improvements/regressions with 1% margin for neutral
+              if (change > 1) {
+                changeStr = `+${data.delta}% 🟢`; // Green for improvement > 1%
+              } else if (change < -1) {
+                changeStr = `${data.delta}% 🔴`; // Red for regression > 1%
               } else {
-                changeStr = `${data.delta}% ⚪`; // Neutral for no change
+                changeStr = `${data.delta}% ⚪`; // Neutral for changes within ±1%
               }
               
               comparisonTable += `| ${benchmark} | ${data.pr.toFixed(2)} | ${data.target.toFixed(2)} | ${changeStr} |\n`;
@@ -388,6 +390,8 @@ jobs:
           
           ### Performance Delta (PR vs ${targetBranchName})
           ${comparisonTable}
+          
+          *Note: Changes within ±1% are considered neutral due to normal benchmark variation.*
           `;
           
           github.rest.issues.createComment({
