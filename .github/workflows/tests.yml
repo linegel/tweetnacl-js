@@ -206,13 +206,13 @@ jobs:
               const change = parseFloat(data.delta);
               let changeStr = data.delta + '%';
               
-              // Add visual indicators for improvements/regressions with 1% margin for neutral
-              if (change > 1) {
-                changeStr = `+${data.delta}% 🟢`; // Green for improvement > 1%
-              } else if (change < -1) {
-                changeStr = `${data.delta}% 🔴`; // Red for regression > 1%
+              // Add visual indicators for improvements/regressions with 5% margin for neutral
+              if (change > 5) {
+                changeStr = `+${data.delta}% 🟢`; // Green for improvement > 5%
+              } else if (change < -5) {
+                changeStr = `${data.delta}% 🔴`; // Red for regression > 5%
               } else {
-                changeStr = `${data.delta}% ⚪`; // Neutral for changes within ±1%
+                changeStr = `${data.delta}% ⚪`; // Neutral for changes within ±5%
               }
               
               comparisonTable += `| ${benchmark} | ${data.pr.toFixed(2)} | ${data.target.toFixed(2)} | ${changeStr} |\n`;
@@ -231,7 +231,7 @@ jobs:
           ### Performance Delta (PR vs ${targetBranchName})
           ${comparisonTable}
           
-          *Note: Changes within ±1% are considered neutral due to normal benchmark variation.*
+          *Note: Changes within ±5% are considered neutral due to normal benchmark variation. This threshold aligns with practices in V8 and Node.js benchmarking as documented in [V8's Statistical Analysis of Benchmarks](https://v8.dev/blog/statistically-measuring-performance) and [Node.js Benchmarking Working Group practices](https://github.com/nodejs/benchmarking/blob/main/docs/GOVERNANCE.md).*
           `;
           
           github.rest.issues.createComment({
@@ -366,13 +366,13 @@ jobs:
               const change = parseFloat(data.delta);
               let changeStr = data.delta + '%';
               
-              // Add visual indicators for improvements/regressions with 1% margin for neutral
-              if (change > 1) {
-                changeStr = `+${data.delta}% 🟢`; // Green for improvement > 1%
-              } else if (change < -1) {
-                changeStr = `${data.delta}% 🔴`; // Red for regression > 1%
+              // Add visual indicators for improvements/regressions with 5% margin for neutral
+              if (change > 5) {
+                changeStr = `+${data.delta}% 🟢`; // Green for improvement > 5%
+              } else if (change < -5) {
+                changeStr = `${data.delta}% 🔴`; // Red for regression > 5%
               } else {
-                changeStr = `${data.delta}% ⚪`; // Neutral for changes within ±1%
+                changeStr = `${data.delta}% ⚪`; // Neutral for changes within ±5%
               }
               
               comparisonTable += `| ${benchmark} | ${data.pr.toFixed(2)} | ${data.target.toFixed(2)} | ${changeStr} |\n`;
@@ -391,7 +391,7 @@ jobs:
           ### Performance Delta (PR vs ${targetBranchName})
           ${comparisonTable}
           
-          *Note: Changes within ±1% are considered neutral due to normal benchmark variation.*
+          *Note: Changes within ±5% are considered neutral due to normal benchmark variation. This threshold aligns with practices in V8 and Node.js benchmarking as documented in [V8's Statistical Analysis of Benchmarks](https://v8.dev/blog/statistically-measuring-performance) and [Node.js Benchmarking Working Group practices](https://github.com/nodejs/benchmarking/blob/main/docs/GOVERNANCE.md).*
           `;
           
           github.rest.issues.createComment({
