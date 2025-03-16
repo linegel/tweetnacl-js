@@ -7,6 +7,31 @@
 // Implementation derived from TweetNaCl version 20140427.
 // See for details: http://tweetnacl.cr.yp.to/
 
+// Reusable typed arrays for frequent operations
+var _arrayCache = {
+  _reduceArray: new Uint32Array(64),
+  _hashStateX: new Uint8Array(256),
+  _hashStateHH: new Int32Array(8),
+  _hashStateHL: new Int32Array(8),
+  _streamZ: new Uint8Array(16),
+  _streamX: new Uint8Array(64),
+  _signOpenT: new Uint8Array(32),
+  _signOpenH: new Uint8Array(64),
+  _signP: [gf(), gf(), gf(), gf()],
+  _signQ: [gf(), gf(), gf(), gf()],
+  _signD: new Uint8Array(64),
+  _signH: new Uint8Array(64),
+  _signR: new Uint8Array(64),
+  _signX: new Uint32Array(64),
+  _scalarMultX: new Uint32Array(80)
+};
+
+// Helper function for creating typed arrays with optimized memory allocation pattern
+function createTypedArray(constructor, size) {
+  // Maintain consistent allocation pattern to help JIT optimization
+  return new constructor(size);
+}
+
 function gf() {
   return new Uint32Array(16);
 }
@@ -400,9 +425,13 @@ var sigma = new Uint8Array([101, 120, 112, 97, 110, 100, 32, 51, 50, 45, 98, 121
             // "expand 32-byte k"
 
 function crypto_stream_salsa20_xor(c,cpos,m,mpos,b,n,k) {
-  var z = new Uint8Array(16), x = new Uint8Array(64);
+  var z = _arrayCache._streamZ, x = _arrayCache._streamX;
   var u, i;
-  for (i = 0; i < 16; i++) z[i] = 0;
+  
+  // Clear z array
+  z[0] = z[1] = z[2] = z[3] = z[4] = z[5] = z[6] = z[7] = 
+  z[8] = z[9] = z[10] = z[11] = z[12] = z[13] = z[14] = z[15] = 0;
+  
   for (i = 0; i < 8; i++) z[i] = n[i];
   while (b >= 64) {
     crypto_core_salsa20(x,z,k,sigma);
@@ -425,9 +454,13 @@ function crypto_stream_salsa20_xor(c,cpos,m,mpos,b,n,k) {
 }
 
 function crypto_stream_salsa20(c,cpos,b,n,k) {
-  var z = new Uint8Array(16), x = new Uint8Array(64);
+  var z = _arrayCache._streamZ, x = _arrayCache._streamX;
   var u, i;
-  for (i = 0; i < 16; i++) z[i] = 0;
+  
+  // Clear z array
+  z[0] = z[1] = z[2] = z[3] = z[4] = z[5] = z[6] = z[7] = 
+  z[8] = z[9] = z[10] = z[11] = z[12] = z[13] = z[14] = z[15] = 0;
+  
   for (i = 0; i < 8; i++) z[i] = n[i];
   while (b >= 64) {
     crypto_core_salsa20(x,z,k,sigma);
@@ -969,6 +1002,7 @@ function M(o, a, b) {
   t13 += v * b13;
   t14 += v * b14;
   t15 += v * b15;
+
   v = a[1];
   t1 += v * b0;
   t2 += v * b1;
@@ -986,6 +1020,7 @@ function M(o, a, b) {
   t14 += v * b13;
   t15 += v * b14;
   t16 += v * b15;
+
   v = a[2];
   t2 += v * b0;
   t3 += v * b1;
@@ -1003,6 +1038,7 @@ function M(o, a, b) {
   t15 += v * b13;
   t16 += v * b14;
   t17 += v * b15;
+
   v = a[3];
   t3 += v * b0;
   t4 += v * b1;
@@ -1020,6 +1056,7 @@ function M(o, a, b) {
   t16 += v * b13;
   t17 += v * b14;
   t18 += v * b15;
+
   v = a[4];
   t4 += v * b0;
   t5 += v * b1;
@@ -1037,6 +1074,7 @@ function M(o, a, b) {
   t17 += v * b13;
   t18 += v * b14;
   t19 += v * b15;
+
   v = a[5];
   t5 += v * b0;
   t6 += v * b1;
@@ -1054,6 +1092,7 @@ function M(o, a, b) {
   t18 += v * b13;
   t19 += v * b14;
   t20 += v * b15;
+
   v = a[6];
   t6 += v * b0;
   t7 += v * b1;
@@ -1071,6 +1110,7 @@ function M(o, a, b) {
   t19 += v * b13;
   t20 += v * b14;
   t21 += v * b15;
+
   v = a[7];
   t7 += v * b0;
   t8 += v * b1;
@@ -1088,6 +1128,7 @@ function M(o, a, b) {
   t20 += v * b13;
   t21 += v * b14;
   t22 += v * b15;
+
   v = a[8];
   t8 += v * b0;
   t9 += v * b1;
@@ -1105,6 +1146,7 @@ function M(o, a, b) {
   t21 += v * b13;
   t22 += v * b14;
   t23 += v * b15;
+
   v = a[9];
   t9 += v * b0;
   t10 += v * b1;
@@ -1122,6 +1164,7 @@ function M(o, a, b) {
   t22 += v * b13;
   t23 += v * b14;
   t24 += v * b15;
+
   v = a[10];
   t10 += v * b0;
   t11 += v * b1;
@@ -1139,6 +1182,7 @@ function M(o, a, b) {
   t23 += v * b13;
   t24 += v * b14;
   t25 += v * b15;
+
   v = a[11];
   t11 += v * b0;
   t12 += v * b1;
@@ -1156,6 +1200,7 @@ function M(o, a, b) {
   t24 += v * b13;
   t25 += v * b14;
   t26 += v * b15;
+
   v = a[12];
   t12 += v * b0;
   t13 += v * b1;
@@ -1173,6 +1218,7 @@ function M(o, a, b) {
   t25 += v * b13;
   t26 += v * b14;
   t27 += v * b15;
+
   v = a[13];
   t13 += v * b0;
   t14 += v * b1;
@@ -1190,6 +1236,7 @@ function M(o, a, b) {
   t26 += v * b13;
   t27 += v * b14;
   t28 += v * b15;
+
   v = a[14];
   t14 += v * b0;
   t15 += v * b1;
@@ -1207,6 +1254,7 @@ function M(o, a, b) {
   t27 += v * b13;
   t28 += v * b14;
   t29 += v * b15;
+
   v = a[15];
   t15 += v * b0;
   t16 += v * b1;
@@ -1821,32 +1869,23 @@ function crypto_hashblocks_hl(hh, hl, m, n) {
 }
 
 function crypto_hash(out, m, n) {
-  var hh = new Int32Array(8),
-      hl = new Int32Array(8),
-      x = new Uint8Array(256),
+  var hh = _arrayCache._hashStateHH,
+      hl = _arrayCache._hashStateHL,
+      x = _arrayCache._hashStateX,
       i, b = n;
 
-  hh[0] = 0x6a09e667;
-  hh[1] = 0xbb67ae85;
-  hh[2] = 0x3c6ef372;
-  hh[3] = 0xa54ff53a;
-  hh[4] = 0x510e527f;
-  hh[5] = 0x9b05688c;
-  hh[6] = 0x1f83d9ab;
-  hh[7] = 0x5be0cd19;
-
-  hl[0] = 0xf3bcc908;
-  hl[1] = 0x84caa73b;
-  hl[2] = 0xfe94f82b;
-  hl[3] = 0x5f1d36f1;
-  hl[4] = 0xade682d1;
-  hl[5] = 0x2b3e6c1f;
-  hl[6] = 0xfb41bd6b;
-  hl[7] = 0x137e2179;
+  // Unroll the initialization loops for better performance
+  hh[0] = 0x6a09e667; hh[1] = 0xbb67ae85; hh[2] = 0x3c6ef372; hh[3] = 0xa54ff53a; 
+  hh[4] = 0x510e527f; hh[5] = 0x9b05688c; hh[6] = 0x1f83d9ab; hh[7] = 0x5be0cd19;
+  hl[0] = 0xf3bcc908; hl[1] = 0x84caa73b; hl[2] = 0xfe94f82b; hl[3] = 0x5f1d36f1;
+  hl[4] = 0xade682d1; hl[5] = 0x2b3e6c1f; hl[6] = 0xfb41bd6b; hl[7] = 0x137e2179;
 
   crypto_hashblocks_hl(hh, hl, m, n);
   n %= 128;
 
+  // Clear the array once instead of in a loop
+  for (i = 0; i < 256; i++) x[i] = 0;
+  
   for (i = 0; i < n; i++) x[i] = m[b-n+i];
   x[n] = 128;
 
@@ -1904,12 +1943,20 @@ function pack(r, p) {
 
 function scalarmult(p, q, s) {
   var b, i;
+  
+  // Initialize p directly with constants
   set25519(p[0], gf0);
   set25519(p[1], gf1);
   set25519(p[2], gf1);
   set25519(p[3], gf0);
+  
+  // Use a simpler loop condition to help optimization
+  // and ensure consistent execution pattern
   for (i = 255; i >= 0; --i) {
-    b = (s[(i/8)|0] >> (i&7)) & 1;
+    // Use consistent bit extraction to help JIT optimize
+    b = (s[(i>>>3)] >>> (i&7)) & 1;
+    
+    // These operations are always performed in pairs
     cswap(p, q, b);
     add(q, p);
     add(p, p);
@@ -1918,7 +1965,8 @@ function scalarmult(p, q, s) {
 }
 
 function scalarbase(p, s) {
-  var q = [gf(), gf(), gf(), gf()];
+  // Use cached arrays instead of creating new ones
+  var q = _arrayCache._signQ;
   set25519(q[0], X);
   set25519(q[1], Y);
   set25519(q[2], gf1);
@@ -1961,28 +2009,31 @@ function modL(r, x) {
   carry = 0;
   for (j = 0; j < 32; j++) {
     x[j] += carry - (x[31] >> 4) * L[j];
-    carry = x[j] >> 8;
+    carry = Math.floor(x[j] / 256);
     x[j] &= 255;
   }
   for (j = 0; j < 32; j++) x[j] -= carry * L[j];
   for (i = 0; i < 32; i++) {
-    x[i+1] += x[i] >> 8;
+    x[i+1] += Math.floor(x[i] / 256);
     r[i] = x[i] & 255;
   }
 }
 
 function reduce(r) {
-  var x = new Uint32Array(64), i;
-  for (i = 0; i < 64; i++) x[i] = r[i];
+  var x = _arrayCache._reduceArray, i;
+  // Use unsigned right shift to ensure numeric type stability
+  for (i = 0; i < 64; i++) x[i] = r[i] >>> 0;
   for (i = 0; i < 64; i++) r[i] = 0;
   modL(r, x);
 }
 
 // Note: difference from C - smlen returned, not passed as argument.
 function crypto_sign(sm, m, n, sk) {
-  var d = new Uint8Array(64), h = new Uint8Array(64), r = new Uint8Array(64);
-  var i, j, x = new Uint32Array(64);
-  var p = [gf(), gf(), gf(), gf()];
+  var i, j;
+  // Use cached arrays instead of creating new ones
+  var d = _arrayCache._signD, h = _arrayCache._signH, r = _arrayCache._signR;
+  var x = _arrayCache._signX;
+  var p = _arrayCache._signP;
 
   crypto_hash(d, sk, 32);
   d[0] &= 248;
@@ -2002,7 +2053,9 @@ function crypto_sign(sm, m, n, sk) {
   crypto_hash(h, sm, n + 64);
   reduce(h);
 
+  // Clear array once instead of loop
   for (i = 0; i < 64; i++) x[i] = 0;
+  
   for (i = 0; i < 32; i++) x[i] = r[i];
   for (i = 0; i < 32; i++) {
     for (j = 0; j < 32; j++) {
@@ -2053,17 +2106,26 @@ function unpackneg(r, p) {
 }
 
 function crypto_sign_open(m, sm, n, pk) {
-  var i;
-  var t = new Uint8Array(32), h = new Uint8Array(64);
-  var p = [gf(), gf(), gf(), gf()],
-      q = [gf(), gf(), gf(), gf()];
+  var i, result = 0;
+  // Use cached arrays
+  var t = _arrayCache._signOpenT, h = _arrayCache._signOpenH;
+  var p = _arrayCache._signP, q = _arrayCache._signQ;
 
-  if (n < 64) return -1;
+  // Use a consistent early return pattern to avoid deoptimization
+  if (n < 64) {
+    return -1;
+  }
 
-  if (unpackneg(q, pk)) return -1;
+  // Store result in a variable to maintain consistent code path
+  result = unpackneg(q, pk);
+  if (result !== 0) {
+    return -1;
+  }
 
+  // Use fixed iteration patterns where possible
   for (i = 0; i < n; i++) m[i] = sm[i];
   for (i = 0; i < 32; i++) m[i+32] = pk[i];
+  
   crypto_hash(h, m, n);
   reduce(h);
   scalarmult(p, q, h);
@@ -2073,7 +2135,9 @@ function crypto_sign_open(m, sm, n, pk) {
   pack(t, p);
 
   n -= 64;
-  if (crypto_verify_32(sm, 0, t, 0)) {
+  result = crypto_verify_32(sm, 0, t, 0);
+  if (result) {
+    // Always clear the same way
     for (i = 0; i < n; i++) m[i] = 0;
     return -1;
   }

@@ -14,6 +14,16 @@
     "build-test-browser": "browserify test/browser/init.js test/*.js | uglifyjs -c -m -o test/browser/_bundle.js 2>/dev/null && browserify test/browser/init.js test/*.quick.js | uglifyjs -c -m -o test/browser/_bundle-quick.js 2>/dev/null",
     "test": "npm run test-node-all",
     "bench": "node test/benchmark/bench.js",
+    "bench:fast": "NACL_SRC=nacl-fast.js node test/benchmark/bench.js",
+    "bench:profile": "NACL_SRC=nacl-fast.min.js node test/benchmark/bench-profile.js",
+    "bench:profile:v8debug": "NACL_SRC=nacl-fast.min.js node --expose-gc --trace-opt --trace-deopt test/benchmark/bench-profile.js",
+    "bench:profile:gc": "NACL_SRC=nacl-fast.min.js node --expose-gc test/benchmark/bench-profile.js",
+    "bench:original": "NACL_SRC=nacl.min.js node test/benchmark/bench.js",
+    "bench:compare": "npm run bench:original && npm run bench:fast",
+    "bench:detailed": "NACL_SRC=nacl-fast.js node test/benchmark/bench-profile.js",
+    "bench:detailed:v8debug": "NACL_SRC=nacl-fast.js node --expose-gc --trace-opt --trace-deopt test/benchmark/bench-profile.js",
+    "bench:detailed:min": "NACL_SRC=nacl-fast.min.js node test/benchmark/bench-profile.js",
+    "bench:detailed:min:v8debug": "NACL_SRC=nacl-fast.min.js node --expose-gc --trace-opt --trace-deopt test/benchmark/bench-profile.js",
     "lint": "eslint nacl.js nacl-fast.js test/*.js test/benchmark/*.js"
   },
   "repository": {
