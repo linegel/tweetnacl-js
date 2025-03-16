@@ -41,7 +41,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '16'
+        node-version: '22'
         cache: 'yarn'
     
     - name: Install dependencies
@@ -134,17 +134,20 @@ jobs:
             const parsedResults = {};
             
             for (const line of lines) {
-              if (line.trim() === '') continue;
+              // Skip empty lines and non-benchmark lines (like "yarn run" or "Done in...")
+              if (line.trim() === '' || line.startsWith('yarn') || line.startsWith('$') || line.startsWith('Done')) continue;
               
-              const parts = line.split(/\s+/);
-              if (parts.length < 5) continue;
-              
-              // Extract the benchmark name and ops/sec value
-              const benchName = parts.slice(0, parts.length - 4).join(' ').trim();
-              const opsPerSec = parseFloat(parts[parts.length - 2]);
-              
-              if (!isNaN(opsPerSec)) {
-                parsedResults[benchName] = opsPerSec;
+              // The format is something like:
+              // "crypto_stream_xor 1K                 91567 ops           0.01 ms/op    182941.40 ops/sec    178.65 MiB/s"
+              const opsPerSecMatch = line.match(/(\d+\.\d+)\s+ops\/sec/);
+              if (opsPerSecMatch) {
+                // Extract benchmark name by taking everything up to the first set of multiple spaces
+                const benchNameMatch = line.match(/^([^\s]+(?:\s+[^\s]+)*)\s{2,}/);
+                if (benchNameMatch) {
+                  const benchName = benchNameMatch[1].trim();
+                  const opsPerSec = parseFloat(opsPerSecMatch[1]);
+                  parsedResults[benchName] = opsPerSec;
+                }
               }
             }
             
@@ -265,17 +268,20 @@ jobs:
             const parsedResults = {};
             
             for (const line of lines) {
-              if (line.trim() === '') continue;
+              // Skip empty lines and non-benchmark lines (like "yarn run" or "Done in...")
+              if (line.trim() === '' || line.startsWith('yarn') || line.startsWith('$') || line.startsWith('Done')) continue;
               
-              const parts = line.split(/\s+/);
-              if (parts.length < 5) continue;
-              
-              // Extract the benchmark name and ops/sec value
-              const benchName = parts.slice(0, parts.length - 4).join(' ').trim();
-              const opsPerSec = parseFloat(parts[parts.length - 2]);
-              
-              if (!isNaN(opsPerSec)) {
-                parsedResults[benchName] = opsPerSec;
+              // The format is something like:
+              // "crypto_stream_xor 1K                 91567 ops           0.01 ms/op    182941.40 ops/sec    178.65 MiB/s"
+              const opsPerSecMatch = line.match(/(\d+\.\d+)\s+ops\/sec/);
+              if (opsPerSecMatch) {
+                // Extract benchmark name by taking everything up to the first set of multiple spaces
+                const benchNameMatch = line.match(/^([^\s]+(?:\s+[^\s]+)*)\s{2,}/);
+                if (benchNameMatch) {
+                  const benchName = benchNameMatch[1].trim();
+                  const opsPerSec = parseFloat(opsPerSecMatch[1]);
+                  parsedResults[benchName] = opsPerSec;
+                }
               }
             }
             
