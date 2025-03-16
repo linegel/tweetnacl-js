@@ -101,11 +101,7 @@ jobs:
       run: yarn install --frozen-lockfile
     
     - name: Run benchmarks for nacl.js
-      id: bench_nacl
-      run: |
-        echo "NACL_BENCH_RESULT<<EOF" >> $GITHUB_ENV
-        NACL_SRC=nacl.js yarn bench | tee bench_nacl_results.txt
-        echo "EOF" >> $GITHUB_ENV
+      run: NACL_SRC=nacl.js yarn bench | tee bench_nacl_results.txt
     
     - name: Upload nacl.js benchmark results
       uses: actions/upload-artifact@v4
@@ -118,12 +114,13 @@ jobs:
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         script: |
-          const naclBench = process.env.NACL_BENCH_RESULT;
+          const fs = require('fs');
+          const benchResults = fs.readFileSync('bench_nacl_results.txt', 'utf8');
           
           const comment = `## Benchmark Results for nacl.js
           
           \`\`\`
-          ${naclBench}
+          ${benchResults}
           \`\`\`
           `;
           
@@ -154,11 +151,7 @@ jobs:
       run: yarn install --frozen-lockfile
     
     - name: Run benchmarks for nacl-fast.min.js
-      id: bench_nacl_fast
-      run: |
-        echo "NACL_FAST_BENCH_RESULT<<EOF" >> $GITHUB_ENV
-        NACL_SRC=nacl-fast.min.js yarn bench | tee bench_nacl_fast_results.txt
-        echo "EOF" >> $GITHUB_ENV
+      run: NACL_SRC=nacl-fast.min.js yarn bench | tee bench_nacl_fast_results.txt
     
     - name: Upload nacl-fast.min.js benchmark results
       uses: actions/upload-artifact@v4
@@ -171,12 +164,13 @@ jobs:
       with:
         github-token: ${{secrets.GITHUB_TOKEN}}
         script: |
-          const naclFastBench = process.env.NACL_FAST_BENCH_RESULT;
+          const fs = require('fs');
+          const benchResults = fs.readFileSync('bench_nacl_fast_results.txt', 'utf8');
           
           const comment = `## Benchmark Results for nacl-fast.min.js
           
           \`\`\`
-          ${naclFastBench}
+          ${benchResults}
           \`\`\`
           `;
           
